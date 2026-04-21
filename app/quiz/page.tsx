@@ -212,7 +212,16 @@ export default function QuizPage() {
       });
     }
 
-    window.location.href = "/results";
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+  window.gtag("event", "quiz_completed", {
+    event_category: "engagement",
+    event_label: "fix_marketing_system"
+  });
+}
+
+setTimeout(() => {
+  window.location.href = "/results";
+}, 300);
   };
 
   const q = questions[current];
