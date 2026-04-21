@@ -10,6 +10,8 @@ type Category =
   | "process"
   | "structure";
 
+type ResultKey = Category | "strong_system";
+
 type ResultContent = {
   label: string;
   headline: string;
@@ -23,7 +25,13 @@ type ResultContent = {
   reassurance: string;
 };
 
-const resultsMap: Record<Category, ResultContent> = {
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
+const resultsMap: Record<ResultKey, ResultContent> = {
   reporting: {
     label: "Reporting & Visibility",
     headline: "Your marketing isn’t unclear. Your reporting isn’t structured.",
@@ -48,8 +56,8 @@ const resultsMap: Record<Category, ResultContent> = {
     ],
     startHere: [
       "Open your last report",
-      "Ask: what are the 3 numbers that actually matter?",
-      "Ask: can I explain them clearly in one sentence?"
+      "Ask what the 3 numbers that actually matter are",
+      "Ask whether you can explain them clearly in one sentence"
     ],
     nextSteps: [
       "Define the small set of metrics that matter",
@@ -209,6 +217,41 @@ const resultsMap: Record<Category, ResultContent> = {
     ignore: ["Adding new tools", "Rebuilding everything", "Complex systems"],
     reassurance:
       "You do not need more. You need less, structured properly."
+  },
+
+  strong_system: {
+    label: "Strong System",
+    headline: "Your marketing system is working. It just needs to stay that way.",
+    snapshot:
+      "You are not dealing with a broken setup. Your system is already structured enough to support reporting, visibility, and day-to-day execution.",
+    looksLike: [
+      "You can usually trust the numbers you are seeing",
+      "Your setup feels more supportive than chaotic",
+      "You can explain what is happening with reasonable confidence",
+      "The system feels maintainable",
+      "Most friction is likely about consistency over time, not missing structure"
+    ],
+    broken: [
+      "There is no major structural gap showing up right now",
+      "Your main risk is drift over time, not a broken foundation"
+    ],
+    missing: [
+      "A simple way to maintain what is already working",
+      "Periodic checks to catch small issues early"
+    ],
+    startHere: [
+      "Pick one part of your setup that matters most",
+      "Check whether it still works the way you expect",
+      "Note any small inconsistencies before they become bigger problems"
+    ],
+    nextSteps: [
+      "Protect the structure you already have",
+      "Review key reporting and system flows regularly",
+      "Tighten weak spots before they turn into larger issues"
+    ],
+    ignore: ["A full rebuild", "More tools", "Fixing things that are already working"],
+    reassurance:
+      "This is a good result. The goal now is not to rebuild. It is to keep your system clear, stable, and trustworthy."
   }
 };
 
@@ -224,7 +267,7 @@ const FORM_BASE_URL = "https://link.feacreate.com/widget/form/eJY81SJhHlOz4GnQP7
 
 export default function ResultsPage() {
   const [loaded, setLoaded] = useState(false);
-  const [primary, setPrimary] = useState<Category | null>(null);
+  const [primary, setPrimary] = useState<ResultKey | null>(null);
   const [secondary, setSecondary] = useState<Category | null>(null);
 
   useEffect(() => {
@@ -252,8 +295,36 @@ export default function ResultsPage() {
 
       averages.sort((a, b) => a.average - b.average);
 
-      setPrimary(averages[0]?.category ?? null);
-      setSecondary(averages[1]?.category ?? null);
+      const lowestAverage = averages[0]?.average ?? 0;
+
+      if (lowestAverage >= 4) {
+        setPrimary("strong_system");
+        setSecondary(null);
+
+        if (typeof window !== "undefined" && typeof window.gtag === "function") {
+          window.gtag("event", "results_viewed", {
+            event_category: "engagement",
+            event_label: "strong_system"
+          });
+        }
+      } else {
+        const primaryCategory = averages[0]?.category ?? null;
+        const secondaryCategory = averages[1]?.category ?? null;
+
+        setPrimary(primaryCategory);
+        setSecondary(secondaryCategory);
+
+        if (
+          typeof window !== "undefined" &&
+          typeof window.gtag === "function" &&
+          primaryCategory
+        ) {
+          window.gtag("event", "results_viewed", {
+            event_category: "engagement",
+            event_label: primaryCategory
+          });
+        }
+      }
     } catch {
       localStorage.removeItem("quiz_scores");
       localStorage.removeItem("quiz_counts");
@@ -287,13 +358,13 @@ export default function ResultsPage() {
     return (
       <main className="min-h-screen bg-[#f3efef] px-6 py-16">
         <div className="mx-auto max-w-3xl rounded-2xl border border-[#c9bcad] bg-white p-8">
-          <p className="text-sm uppercase tracking-[0.2em] text-[#62493c] mb-3">
+          <p className="mb-3 text-sm uppercase tracking-[0.2em] text-[#62493c]">
             No results found
           </p>
-          <h1 className="text-3xl font-semibold text-[#0d0b09] mb-4">
+          <h1 className="mb-4 text-3xl font-semibold text-[#0d0b09]">
             Start the check first
           </h1>
-          <p className="text-[#2a1f1c] mb-6 leading-7">
+          <p className="mb-6 leading-7 text-[#2a1f1c]">
             We could not find any saved quiz answers yet.
           </p>
           <Link
@@ -317,19 +388,17 @@ export default function ResultsPage() {
     <main className="min-h-screen bg-[#f3efef] px-6 py-12">
       <div className="mx-auto max-w-3xl space-y-6">
         <header>
-          <p className="text-xs tracking-[0.2em] uppercase text-[#62493c] mb-3">
+          <p className="mb-3 text-xs uppercase tracking-[0.2em] text-[#62493c]">
             Your result
           </p>
-          <h1 className="text-3xl md:text-4xl font-semibold text-[#0d0b09] leading-tight mb-4">
+          <h1 className="mb-4 text-3xl font-semibold leading-tight text-[#0d0b09] md:text-4xl">
             {result.headline}
           </h1>
-          <p className="text-lg text-[#2a1f1c] leading-8">
-            {result.snapshot}
-          </p>
+          <p className="text-lg leading-8 text-[#2a1f1c]">{result.snapshot}</p>
         </header>
 
         <section className="rounded-2xl border border-[#c9bcad] bg-white p-6">
-          <h2 className="text-xl font-semibold text-[#0d0b09] mb-4">
+          <h2 className="mb-4 text-xl font-semibold text-[#0d0b09]">
             What this usually looks like
           </h2>
           <ul className="space-y-3 text-[#2a1f1c]">
@@ -340,7 +409,7 @@ export default function ResultsPage() {
         </section>
 
         <section className="rounded-2xl border border-[#c9bcad] bg-white p-6">
-          <h2 className="text-xl font-semibold text-[#0d0b09] mb-4">
+          <h2 className="mb-4 text-xl font-semibold text-[#0d0b09]">
             What’s broken
           </h2>
           <ul className="space-y-3 text-[#2a1f1c]">
@@ -351,7 +420,7 @@ export default function ResultsPage() {
         </section>
 
         <section className="rounded-2xl border border-[#c9bcad] bg-white p-6">
-          <h2 className="text-xl font-semibold text-[#0d0b09] mb-4">
+          <h2 className="mb-4 text-xl font-semibold text-[#0d0b09]">
             What’s missing
           </h2>
           <ul className="space-y-3 text-[#2a1f1c]">
@@ -362,7 +431,7 @@ export default function ResultsPage() {
         </section>
 
         <section className="rounded-2xl border border-[#c9bcad] bg-white p-6">
-          <h2 className="text-xl font-semibold text-[#0d0b09] mb-4">
+          <h2 className="mb-4 text-xl font-semibold text-[#0d0b09]">
             Start here (10 minutes)
           </h2>
           <ul className="space-y-3 text-[#2a1f1c]">
@@ -373,7 +442,7 @@ export default function ResultsPage() {
         </section>
 
         <section className="rounded-2xl border border-[#c9bcad] bg-white p-6">
-          <h2 className="text-xl font-semibold text-[#0d0b09] mb-4">
+          <h2 className="mb-4 text-xl font-semibold text-[#0d0b09]">
             Your 3-step fix path
           </h2>
           <ul className="space-y-3 text-[#2a1f1c]">
@@ -384,7 +453,7 @@ export default function ResultsPage() {
         </section>
 
         <section className="rounded-2xl border border-[#c9bcad] bg-white p-6">
-          <h2 className="text-xl font-semibold text-[#0d0b09] mb-4">
+          <h2 className="mb-4 text-xl font-semibold text-[#0d0b09]">
             What to ignore for now
           </h2>
           <ul className="space-y-3 text-[#2a1f1c]">
@@ -395,20 +464,20 @@ export default function ResultsPage() {
         </section>
 
         <section className="rounded-2xl border border-[#c9bcad] bg-white p-6">
-          <h2 className="text-xl font-semibold text-[#0d0b09] mb-4">
+          <h2 className="mb-4 text-xl font-semibold text-[#0d0b09]">
             A useful note
           </h2>
-          <p className="text-[#2a1f1c] leading-7">{result.reassurance}</p>
+          <p className="leading-7 text-[#2a1f1c]">{result.reassurance}</p>
         </section>
 
         <section className="rounded-2xl border border-[#c9bcad] bg-white p-6">
-          <p className="text-xs tracking-[0.2em] uppercase text-[#62493c] mb-2">
+          <p className="mb-2 text-xs uppercase tracking-[0.2em] text-[#62493c]">
             Next step
           </p>
-          <h2 className="text-2xl font-semibold text-[#0d0b09] mb-3">
+          <h2 className="mb-3 text-2xl font-semibold text-[#0d0b09]">
             Send me my full fix plan
           </h2>
-          <p className="text-[#2a1f1c] leading-7 mb-6">
+          <p className="mb-6 leading-7 text-[#2a1f1c]">
             I’ll send you your breakdown, what to fix next, and how to simplify
             this without rebuilding everything.
           </p>
