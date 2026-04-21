@@ -20,6 +20,12 @@ type Question = {
   answers: Answer[];
 };
 
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 const questions: Question[] = [
   // Reporting & Visibility
   {
@@ -198,6 +204,14 @@ export default function QuizPage() {
 
     localStorage.setItem("quiz_scores", JSON.stringify(nextScores));
     localStorage.setItem("quiz_counts", JSON.stringify(nextCounts));
+
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+      window.gtag("event", "quiz_completed", {
+        event_category: "engagement",
+        event_label: "fix_marketing_system"
+      });
+    }
+
     window.location.href = "/results";
   };
 
