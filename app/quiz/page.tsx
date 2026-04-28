@@ -23,11 +23,11 @@ type Question = {
 declare global {
   interface Window {
     gtag?: (...args: any[]) => void;
+    auditCompletedFired?: boolean;
   }
 }
 
 const questions: Question[] = [
-  // Reporting & Visibility
   {
     category: "reporting",
     question: "How do you usually pull together a marketing performance update?",
@@ -58,8 +58,6 @@ const questions: Question[] = [
       { label: "I struggle to give a clear answer", score: 1 }
     ]
   },
-
-  // Tools & Data Flow
   {
     category: "data_flow",
     question: "How well do your marketing tools connect to each other?",
@@ -80,8 +78,6 @@ const questions: Question[] = [
       { label: "Constantly", score: 1 }
     ]
   },
-
-  // Strategic Alignment
   {
     category: "alignment",
     question: "How clear are you on what marketing is expected to deliver?",
@@ -102,8 +98,6 @@ const questions: Question[] = [
       { label: "I struggle to connect it at all", score: 1 }
     ]
   },
-
-  // Process & Handover
   {
     category: "process",
     question: "How documented are your key marketing processes?",
@@ -124,8 +118,6 @@ const questions: Question[] = [
       { label: "It would fall apart", score: 1 }
     ]
   },
-
-  // Operational Structure
   {
     category: "structure",
     question: "How organized is your marketing setup overall?",
@@ -175,6 +167,7 @@ export default function QuizPage() {
     process: 0,
     structure: 0
   });
+
   const [counts, setCounts] = useState<Record<Category, number>>({
     reporting: 0,
     data_flow: 0,
@@ -205,23 +198,27 @@ export default function QuizPage() {
     localStorage.setItem("quiz_scores", JSON.stringify(nextScores));
     localStorage.setItem("quiz_counts", JSON.stringify(nextCounts));
 
-    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.gtag === "function" &&
+      !window.auditCompletedFired
+    ) {
       window.gtag("event", "quiz_completed", {
         event_category: "engagement",
         event_label: "fix_marketing_system"
       });
+
+      window.gtag("event", "audit_completed", {
+        event_category: "conversion",
+        event_label: "fix_marketing_system"
+      });
+
+      window.auditCompletedFired = true;
     }
 
-    if (typeof window !== "undefined" && typeof window.gtag === "function") {
-  window.gtag("event", "quiz_completed", {
-    event_category: "engagement",
-    event_label: "fix_marketing_system"
-  });
-}
-
-setTimeout(() => {
-  window.location.href = "/results";
-}, 300);
+    setTimeout(() => {
+      window.location.href = "/results";
+    }, 300);
   };
 
   const q = questions[current];

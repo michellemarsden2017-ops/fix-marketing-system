@@ -28,6 +28,7 @@ type ResultContent = {
 declare global {
   interface Window {
     gtag?: (...args: any[]) => void;
+    auditResultFired?: boolean;
   }
 }
 
@@ -311,6 +312,35 @@ export default function ResultsPage() {
     const rawScores = localStorage.getItem("quiz_scores");
     const rawCounts = localStorage.getItem("quiz_counts");
 
+    const fireResultEvents = (
+      problemArea: ResultKey,
+      secondaryIssue: Category | null
+    ) => {
+      if (
+        typeof window !== "undefined" &&
+        typeof window.gtag === "function" &&
+        !window.auditResultFired
+      ) {
+        window.gtag("event", "results_viewed", {
+          event_category: "engagement",
+          event_label: problemArea
+        });
+
+        window.gtag("event", "audit_result", {
+          event_category: "diagnosis",
+          event_label: problemArea,
+          problem_area: problemArea,
+          secondary_issue: secondaryIssue ?? "none",
+          result_type:
+            problemArea === "strong_system" || problemArea === "system_wide"
+              ? problemArea
+              : "category_result"
+        });
+
+        window.auditResultFired = true;
+      }
+    };
+
     if (!rawScores || !rawCounts) {
       setLoaded(true);
       return;
@@ -340,27 +370,11 @@ export default function ResultsPage() {
       if (lowestAverage >= 4) {
         setPrimary("strong_system");
         setSecondary(null);
-
-        setTimeout(() => {
-          if (typeof window !== "undefined" && typeof window.gtag === "function") {
-            window.gtag("event", "results_viewed", {
-              event_category: "engagement",
-              event_label: "strong_system"
-            });
-          }
-        }, 200);
+        fireResultEvents("strong_system", null);
       } else if (lowestCount >= 3) {
         setPrimary("system_wide");
         setSecondary(null);
-
-        setTimeout(() => {
-          if (typeof window !== "undefined" && typeof window.gtag === "function") {
-            window.gtag("event", "results_viewed", {
-              event_category: "engagement",
-              event_label: "system_wide"
-            });
-          }
-        }, 200);
+        fireResultEvents("system_wide", null);
       } else {
         const primaryCategory = averages[0]?.category ?? null;
         const secondaryCategory = averages[1]?.category ?? null;
@@ -368,18 +382,9 @@ export default function ResultsPage() {
         setPrimary(primaryCategory);
         setSecondary(secondaryCategory);
 
-        setTimeout(() => {
-          if (
-            typeof window !== "undefined" &&
-            typeof window.gtag === "function" &&
-            primaryCategory
-          ) {
-            window.gtag("event", "results_viewed", {
-              event_category: "engagement",
-              event_label: primaryCategory
-            });
-          }
-        }, 200);
+        if (primaryCategory) {
+          fireResultEvents(primaryCategory, secondaryCategory);
+        }
       }
     } catch {
       localStorage.removeItem("quiz_scores");
