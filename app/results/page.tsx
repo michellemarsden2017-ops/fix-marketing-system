@@ -19,16 +19,17 @@ declare global {
   }
 }
 
-const categoryLabels: Record<Category, string> = {
+const categoryLabels: Record<ResultKey, string> = {
   reporting: "Reporting & Visibility",
   data_flow: "Tools & Data Flow",
   alignment: "Strategic Alignment",
   process: "Process & Handover",
-  structure: "Operational Structure"
+  structure: "Operational Structure",
+  strong_system: "Strong System",
+  system_wide: "System-Wide Strain"
 };
 
-const LANDING_PAGE_BASE_URL =
-  "https://glowsparkdigital.com/audit-ty";
+const LANDING_PAGE_BASE_URL = "https://glowsparkdigital.com/audit-ty";
 
 function trackEvent(eventName: string, params?: Record<string, string>) {
   if (typeof window !== "undefined" && typeof window.gtag === "function") {
@@ -69,22 +70,40 @@ export default function ResultsPage() {
 
       averages.sort((a, b) => a.average - b.average);
 
-      const primaryCategory = averages[0]?.category ?? null;
-      const secondaryCategory = averages[1]?.category ?? null;
+      const allStrong = averages.every((item) => item.average >= 4.5);
+      const systemWide = averages.filter((item) => item.average < 3).length >= 3;
 
-      setPrimary(primaryCategory);
-      setSecondary(secondaryCategory);
+      let finalPrimary: ResultKey | null = null;
+      let finalSecondary: Category | null = null;
+      let resultType = "primary_result";
+
+      if (allStrong) {
+        finalPrimary = "strong_system";
+        finalSecondary = null;
+        resultType = "strong_system";
+      } else if (systemWide) {
+        finalPrimary = "system_wide";
+        finalSecondary = null;
+        resultType = "system_wide";
+      } else {
+        finalPrimary = averages[0]?.category ?? null;
+        finalSecondary = averages[1]?.category ?? null;
+        resultType = "category_result";
+      }
+
+      setPrimary(finalPrimary);
+      setSecondary(finalSecondary);
 
       if (
         typeof window !== "undefined" &&
         typeof window.gtag === "function" &&
         !window.auditResultFired &&
-        primaryCategory
+        finalPrimary
       ) {
         window.gtag("event", "audit_result_viewed", {
-          problem_area: primaryCategory,
-          secondary_issue: secondaryCategory ?? "none",
-          result_type: "primary_result",
+          problem_area: finalPrimary,
+          secondary_issue: finalSecondary ?? "none",
+          result_type: resultType,
           funnel_stage: "diagnosis"
         });
 
@@ -128,7 +147,6 @@ export default function ResultsPage() {
   return (
     <main className="min-h-screen bg-[#f3efef] px-6 py-12">
       <div className="mx-auto max-w-2xl space-y-8">
-
         <div>
           <h1 className="text-3xl md:text-4xl font-semibold text-[#0d0b09] mb-4">
             Here’s what’s making your marketing feel harder than it should
@@ -139,7 +157,7 @@ export default function ResultsPage() {
           </p>
 
           <h2 className="text-xl font-semibold text-[#0d0b09] mb-2">
-            Your main friction point: {categoryLabels[primary as Category]}
+            Your main friction point: {categoryLabels[primary]}
           </h2>
 
           <p className="text-[#2a1f1c]">
@@ -170,7 +188,6 @@ export default function ResultsPage() {
           </h3>
 
           <form action={formAction} method="GET" className="space-y-4">
-
             <input type="hidden" name="problem_area" value={primary} />
             <input type="hidden" name="secondary_issue" value={secondary ?? ""} />
 
@@ -213,7 +230,6 @@ export default function ResultsPage() {
         <Link href="/quiz" className="text-sm text-[#62493c]">
           Retake check
         </Link>
-
       </div>
     </main>
   );
