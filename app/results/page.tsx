@@ -29,7 +29,8 @@ const categoryLabels: Record<ResultKey, string> = {
   system_wide: "System-Wide Strain"
 };
 
-const LANDING_PAGE_BASE_URL = "https://glowsparkdigital.com/audit-ty";
+const FEA_FORM_BASE_URL =
+  "https://link.feacreate.com/widget/form/eJY81SJhHlOz4GnQP7du";
 
 function trackEvent(eventName: string, params?: Record<string, string>) {
   if (typeof window !== "undefined" && typeof window.gtag === "function") {
@@ -117,16 +118,16 @@ export default function ResultsPage() {
     }
   }, []);
 
-  const formAction = useMemo(() => {
-    if (!primary) return LANDING_PAGE_BASE_URL;
+  const feaFormUrl = useMemo(() => {
+  if (!primary) return FEA_FORM_BASE_URL;
 
-    const params = new URLSearchParams({
-      problem_area: primary,
-      secondary_issue: secondary ?? ""
-    });
+  const params = new URLSearchParams({
+    problem_area: primary,
+    secondary_issue: secondary ?? ""
+  });
 
-    return `${LANDING_PAGE_BASE_URL}?${params.toString()}`;
-  }, [primary, secondary]);
+  return `${FEA_FORM_BASE_URL}?${params.toString()}`;
+}, [primary, secondary]);
 
   if (!loaded) {
     return (
@@ -183,9 +184,24 @@ export default function ResultsPage() {
         </div>
 
         <div className="rounded-2xl border border-[#c9bcad] bg-white p-6">
-          <h3 className="text-lg font-semibold text-[#0d0b09] mb-3">
-            Send me a copy + next steps
-          </h3>
+  <h3 className="text-lg font-semibold text-[#0d0b09] mb-3">
+    Send me a copy + next steps
+  </h3>
+
+  <p className="text-sm text-[#2a1f1c] mb-4">
+    Enter your details below and I’ll send a copy of your result, plus a short follow-up based on your main friction point.
+  </p>
+
+  <iframe
+    src={feaFormUrl}
+    title="Marketing Infrastructure Audit Form"
+    className="w-full min-h-[520px] border-0"
+  />
+
+  <p className="text-xs text-[#62493c] mt-3">
+    You’ll receive a copy of your result and a short follow-up. No noise. Just clarity.
+  </p>
+</div>
 
           <form action={formAction} method="GET" className="space-y-4">
             <input type="hidden" name="problem_area" value={primary} />
