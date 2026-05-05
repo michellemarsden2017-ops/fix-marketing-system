@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Script from "next/script";
 import { useEffect, useMemo, useState } from "react";
 
 type Category =
@@ -31,12 +32,6 @@ const categoryLabels: Record<ResultKey, string> = {
 
 const FEA_FORM_BASE_URL =
   "https://link.feacreate.com/widget/form/eJY81SJhHlOz4GnQP7du";
-
-function trackEvent(eventName: string, params?: Record<string, string>) {
-  if (typeof window !== "undefined" && typeof window.gtag === "function") {
-    window.gtag("event", eventName, params);
-  }
-}
 
 export default function ResultsPage() {
   const [loaded, setLoaded] = useState(false);
@@ -76,7 +71,7 @@ export default function ResultsPage() {
 
       let finalPrimary: ResultKey | null = null;
       let finalSecondary: Category | null = null;
-      let resultType = "primary_result";
+      let resultType = "category_result";
 
       if (allStrong) {
         finalPrimary = "strong_system";
@@ -89,7 +84,6 @@ export default function ResultsPage() {
       } else {
         finalPrimary = averages[0]?.category ?? null;
         finalSecondary = averages[1]?.category ?? null;
-        resultType = "category_result";
       }
 
       setPrimary(finalPrimary);
@@ -119,15 +113,15 @@ export default function ResultsPage() {
   }, []);
 
   const feaFormUrl = useMemo(() => {
-  if (!primary) return FEA_FORM_BASE_URL;
+    if (!primary) return FEA_FORM_BASE_URL;
 
-  const params = new URLSearchParams({
-    problem_area: primary,
-    secondary_issue: secondary ?? ""
-  });
+    const params = new URLSearchParams({
+      problem_area: primary,
+      secondary_issue: secondary ?? ""
+    });
 
-  return `${FEA_FORM_BASE_URL}?${params.toString()}`;
-}, [primary, secondary]);
+    return `${FEA_FORM_BASE_URL}?${params.toString()}`;
+  }, [primary, secondary]);
 
   if (!loaded) {
     return (
@@ -147,6 +141,11 @@ export default function ResultsPage() {
 
   return (
     <main className="min-h-screen bg-[#f3efef] px-6 py-12">
+      <Script
+        src="https://link.feacreate.com/js/form_embed.js"
+        strategy="afterInteractive"
+      />
+
       <div className="mx-auto max-w-2xl space-y-8">
         <div>
           <h1 className="text-3xl md:text-4xl font-semibold text-[#0d0b09] mb-4">
@@ -169,7 +168,9 @@ export default function ResultsPage() {
         <div className="space-y-4 text-[#2a1f1c]">
           <p>You’re likely pulling numbers from multiple tools.</p>
           <p>Each one is “correct” on its own, but they don’t tell the same story.</p>
-          <p>That’s why reporting takes longer than it should and still doesn’t feel fully reliable.</p>
+          <p>
+            That’s why reporting takes longer than it should and still doesn’t feel fully reliable.
+          </p>
         </div>
 
         <div>
@@ -184,59 +185,31 @@ export default function ResultsPage() {
         </div>
 
         <div className="rounded-2xl border border-[#c9bcad] bg-white p-6">
-  <h3 className="text-lg font-semibold text-[#0d0b09] mb-3">
-    Send me a copy + next steps
-  </h3>
+          <h3 className="text-lg font-semibold text-[#0d0b09] mb-3">
+            Send me a copy + next steps
+          </h3>
 
-  <p className="text-sm text-[#2a1f1c] mb-4">
-    Enter your details below and I’ll send a copy of your result, plus a short follow-up based on your main friction point.
-  </p>
+          <p className="text-sm text-[#2a1f1c] mb-4">
+            Enter your details below and I’ll send a copy of your result, plus a short follow-up based on your main friction point.
+          </p>
 
-  <iframe
-    src={feaFormUrl}
-    title="Marketing Infrastructure Audit Form"
-    className="w-full min-h-[520px] border-0"
-  />
-
-  <p className="text-xs text-[#62493c] mt-3">
-    You’ll receive a copy of your result and a short follow-up. No noise. Just clarity.
-  </p>
-</div>
-
-          <form action={formAction} method="GET" className="space-y-4">
-            <input type="hidden" name="problem_area" value={primary} />
-            <input type="hidden" name="secondary_issue" value={secondary ?? ""} />
-
-            <input
-              type="text"
-              name="first_name"
-              placeholder="Name"
-              required
-              className="w-full border border-[#c9bcad] rounded-lg px-4 py-3"
-            />
-
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              required
-              className="w-full border border-[#c9bcad] rounded-lg px-4 py-3"
-            />
-
-            <button
-              type="submit"
-              className="w-full rounded-full px-6 py-3 text-sm font-medium"
-              style={{ backgroundColor: "#2a1f1c", color: "#eedac4" }}
-              onClick={() =>
-                trackEvent("audit_cta_clicked", {
-                  problem_area: primary,
-                  secondary_issue: secondary ?? "none"
-                })
-              }
-            >
-              Send me my breakdown
-            </button>
-          </form>
+          <iframe
+            src={feaFormUrl}
+            style={{ width: "100%", height: "452px", border: "none", borderRadius: "0px" }}
+            id="inline-eJY81SJhHlOz4GnQP7du"
+            data-layout='{"id":"INLINE"}'
+            data-trigger-type="alwaysShow"
+            data-trigger-value=""
+            data-activation-type="alwaysActivated"
+            data-activation-value=""
+            data-deactivation-type="neverDeactivate"
+            data-deactivation-value=""
+            data-form-name="The Infrastructure Audit - April 2026"
+            data-height="452"
+            data-layout-iframe-id="inline-eJY81SJhHlOz4GnQP7du"
+            data-form-id="eJY81SJhHlOz4GnQP7du"
+            title="The Infrastructure Audit - April 2026"
+          />
 
           <p className="text-xs text-[#62493c] mt-3">
             You’ll receive a copy of your result and a short follow-up. No noise. Just clarity.
