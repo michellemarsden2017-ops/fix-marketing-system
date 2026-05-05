@@ -186,11 +186,11 @@ export default function ResultsPage() {
 
         <div className="rounded-2xl border border-[#c9bcad] bg-white p-6">
           <h3 className="text-lg font-semibold text-[#0d0b09] mb-3">
-            Send me a copy + next steps
+            See what to do next
           </h3>
 
           <p className="text-sm text-[#2a1f1c] mb-4">
-            Enter your details below and I’ll send a copy of your result, plus a short follow-up based on your main friction point.
+            Enter your details to get the next step based on your main friction point.
           </p>
 
           <iframe
@@ -212,7 +212,7 @@ export default function ResultsPage() {
           />
 
           <p className="text-xs text-[#62493c] mt-3">
-            You’ll receive a copy of your result and a short follow-up. No noise. Just clarity.
+            You’ll receive a short follow-up focused on your result. No noise. Just clarity.
           </p>
         </div>
 
